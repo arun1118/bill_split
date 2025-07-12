@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pub Bill Splitter</title>
+    <style>
+        :root {
+            --bg-color: #121212; 
+            --container-bg: #1f1f1f;
+            --text-color: #e0e0e0; 
+            --header-color: #00e676; 
+            --table-header-bg: #007bff; 
+            --table-row-even: #282828; 
+            --table-row-hover: #3a3a3a; 
+            --border-color: #333333; 
+            --button-bg: #00e676; 
+            --button-hover: #00b35b; 
+            --results-bg: #1f1f1f; 
+            --results-border: #00e676; 
+            --strong-color: #00e676; 
+            --sub-strong-color: #007bff; 
+            --hr-color: #444444; 
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 1200px;
+            box-sizing: border-box;
+        }
+
+        h1, h2 {
+            color: var(--header-color);
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .bill-table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table thead th {
+            background-color: var(--table-header-bg);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        table tbody td {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: var(--table-row-even);
+        }
+
+        table tbody tr:hover {
+            background-color: var(--table-row-hover);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .checkbox-group label {
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 5px;
+            transform: scale(1.1);
+            accent-color: var(--header-color); 
+        }
+
+        .calculate-button-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        button {
+            background-color: var(--button-bg);
+            color: var(--bg-color); 
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .results {
+            background-color: var(--results-bg);
+            border: 1px solid var(--results-border);
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .results h2 {
+            color: var(--header-color);
+            margin-bottom: 20px;
+        }
+
+        .results p {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .results p strong {
+            color: var(--strong-color);
+        }
+
+        .results p strong.secondary-strong {
+            color: var(--sub-strong-color);
+        }
+
+        hr {
+            border: none;
+            border-top: 1px dashed var(--hr-color);
+            margin: 20px 0;
+        }
+
+        .person-split {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--hr-color);
+        }
+
+        .person-split:first-of-type {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            table thead th, table tbody td {
+                padding: 8px 10px;
+            }
+
+            .checkbox-group {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+
+            .results {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pub Bill Splitter</h1>
+
+        <div class="bill-table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Price (₹)</th>
+                        <th>Split Among</th>
+                    </tr>
+                </thead>
+                <tbody id="billItemsBody">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="calculate-button-container">
+            <button id="calculateBtn">Calculate Bill</button>
+        </div>
+
+        <div class="results" id="results">
+            <h2>Calculation Results</h2>
+            <p><strong>Total Food Bill:</strong> ₹<span id="totalFoodBill">0.00</span></p>
+            <p><strong>Total Tax:</strong> ₹<span id="totalTax">0.00</span></p>
+            <p><strong>Total Discount:</strong> ₹<span id="totalDiscount">0.00</span></p>
+            <p><strong class="secondary-strong">Final Amount (Food + Tax - Discount):</strong> ₹<span id="finalAmount">0.00</span></p>
+            <hr>
+            <h3>Amount to be Paid by Each Person:</h3>
+            <div id="personPayments">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        const friends = ["Arun", "Vedant", "Pritam", "Sagar", "Krishna", "Subhankar"];
+
+        const billItems = [
+            { count: 1, item: "LIT-1", price: 760, splitAmong: ["Pritam"] },
+            { count: 2, item: "LIT-2", price: 760, splitAmong: ["Vedant", "Arun"] },
+            { count: 3, item: "Magnum", price: 350, splitAmong: ["Pritam"] },
+            { count: 4, item: "Magnum", price: 350, splitAmong: ["Arun"] },
+            { count: 5, item: "Kingfisher", price: 290, splitAmong: ["Vedant"] },
+            { count: 6, item: "TuborG", price: 290, splitAmong: ["Arun"] },
+            { count: 7, item: "Magnum Draught", price: 370, splitAmong: ["Vedant"] },
+            { count: 8, item: "Chicken Wings Platter", price: 850, splitAmong: ["Vedant", "Pritam", "Subhankar"] },
+            { count: 9, item: "Classic French fries", price: 240, splitAmong: ["Pritam", "Vedant", "Arun", "Subhankar", "Sagar", "Krishna"] },
+            { count: 10, item: "Peri-peri French fries", price: 250, splitAmong: ["Pritam", "Vedant", "Arun", "Subhankar", "Sagar", "Krishna"] },
+            { count: 11, item: "Chilli Paneer", price: 360, splitAmong: ["Pritam", "Vedant", "Arun", "Subhankar", "Sagar", "Krishna"] },
+            { count: 12, item: "Paneer Pizza", price: 370, splitAmong: ["Pritam", "Vedant", "Arun", "Subhankar", "Sagar", "Krishna"] },
+            { count: 13, item: "Kadai Paneer", price: 320, splitAmong: ["Arun", "Sagar", "Krishna"] },
+            { count: 14, item: "Vegetable Biryani", price: 310, splitAmong: ["Vedant", "Arun"] },
+            { count: 15, item: "Roti", price: 360, splitAmong: ["Arun", "Sagar", "Krishna"] },
+            { count: 16, item: "California Summer", price: 220, splitAmong: ["Sagar"] },
+            { count: 17, item: "Brownie Shake", price: 220, splitAmong: ["Krishna"] },
+            { count: 18, item: "Mango Mule", price: 220, splitAmong: ["Subhankar"] },
+            { count: 19, item: "CheeseCake", price: 350, splitAmong: ["Vedant", "Pritam", "Subhankar", "Arun"] }
+        ];
+
+        const totalTax = 101.75 + 101.75 + 0.5 + 65;
+        const totalDiscount = 744.40 + 200;
+
+        const billItemsBody = document.getElementById('billItemsBody');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const totalFoodBillSpan = document.getElementById('totalFoodBill');
+        const totalTaxSpan = document.getElementById('totalTax');
+        const totalDiscountSpan = document.getElementById('totalDiscount');
+        const finalAmountSpan = document.getElementById('finalAmount');
+        const personPaymentsDiv = document.getElementById('personPayments');
+
+
+        function renderBillItems() {
+            billItemsBody.innerHTML = ''; 
+            billItems.forEach((billItem, index) => {
+                const row = billItemsBody.insertRow();
+                row.insertCell(0).textContent = billItem.item;
+                row.insertCell(1).textContent = billItem.price.toFixed(2);
+
+                const checkboxCell = row.insertCell(2);
+                const checkboxGroup = document.createElement('div');
+                checkboxGroup.classList.add('checkbox-group');
+
+                friends.forEach(friend => {
+                    const label = document.createElement('label');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = `item-${index}`;
+                    checkbox.value = friend;
+                    checkbox.checked = billItem.splitAmong.includes(friend);
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(friend));
+                    checkboxGroup.appendChild(label);
+                });
+                checkboxCell.appendChild(checkboxGroup);
+            });
+        }
+
+        function calculateBill() {
+            let totalFoodBill = 0;
+            const personFoodContribution = {};
+            friends.forEach(friend => personFoodContribution[friend] = 0);
+
+            const rows = billItemsBody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                const itemPrice = parseFloat(row.cells[1].textContent);
+                totalFoodBill += itemPrice;
+
+                const checkboxes = row.cells[2].querySelectorAll('input[type="checkbox"]:checked');
+                const splittingFriends = Array.from(checkboxes).map(cb => cb.value);
+
+                if (splittingFriends.length > 0) {
+                    const share = itemPrice / splittingFriends.length;
+                    splittingFriends.forEach(friend => {
+                        personFoodContribution[friend] += share;
+                    });
+                }
+            });
+
+            const finalAmount = totalFoodBill + totalTax - totalDiscount;
+
+            totalFoodBillSpan.textContent = totalFoodBill.toFixed(2);
+            totalTaxSpan.textContent = totalTax.toFixed(2);
+            totalDiscountSpan.textContent = totalDiscount.toFixed(2);
+            finalAmountSpan.textContent = finalAmount.toFixed(2);
+
+            personPaymentsDiv.innerHTML = ''; 
+            friends.forEach(friend => {
+                const foodPercentage = (totalFoodBill === 0) ? 0 : (personFoodContribution[friend] / totalFoodBill);
+                const amountToPay = foodPercentage * finalAmount;
+
+                const p = document.createElement('p');
+                p.classList.add('person-split');
+                p.innerHTML = `<strong>${friend}:</strong> ` +
+                              `Food Bill Contribution: ₹${personFoodContribution[friend].toFixed(2)} (` +
+                              `${(foodPercentage * 100).toFixed(2)}%) - ` +
+                              `Amount to Pay: ₹${amountToPay.toFixed(2)}`;
+                personPaymentsDiv.appendChild(p);
+            });
+        }
+
+        renderBillItems();
+
+
+        calculateBtn.addEventListener('click', calculateBill);
+
+
+        calculateBill();
+    </script>
+</body>
+</html>
